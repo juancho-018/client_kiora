@@ -1,0 +1,39 @@
+---
+import '../styles/global.css';
+
+interface Props {
+	title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="es">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="description" content="Kiora - Dulcería Los Robles" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{title}</title>
+		
+		<!-- Google Fonts -->
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+		
+		<!-- Weglot - Official Integration -->
+		<script is:inline src="https://cdn.weglot.com/weglot.min.js"></script>
+		<script is:inline define:vars={{ apiKey: import.meta.env.PUBLIC_WEGLOT_API_KEY }}>
+			if (apiKey) {
+				Weglot.initialize({
+					api_key: apiKey
+				});
+			}
+		</script>
+	</head>
+	<body class="bg-cream selection:bg-strawberry-red/20 overflow-x-hidden">
+		<slot />
+	</body>
+</html>

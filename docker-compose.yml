@@ -1,0 +1,14 @@
+services:
+  kiora_client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - PUBLIC_API_URL=${PUBLIC_API_URL:-http://localhost:3000/api}
+        - PUBLIC_WEGLOT_API_KEY=${PUBLIC_WEGLOT_API_KEY:-wg_c28c17f31163d7786f2c5dde6f25201c5}
+    container_name: kiora_client_app
+    restart: unless-stopped
+    ports:
+      - "9090:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
