@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useCartStore } from '../store/cartStore';
 import { type Product } from '../services/ProductService';
+import { getImageUrl } from '../utils/getImageUrl';
 
 const TAGS = [
   { id: 'Comida', label: 'Comida', icon: '🍔' },
@@ -44,7 +45,7 @@ export const ProductCard: React.FC<Props> = ({ product, onSelect }) => {
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-white mb-0 p-4">
         <img
-          src={product.imagen_prod || '/placeholder.png'}
+          src={getImageUrl(product.imagen_prod) || '/placeholder.png'}
           alt={product.nom_prod}
           className="w-full h-full object-contain transition-all duration-700"
         />

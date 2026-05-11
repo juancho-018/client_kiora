@@ -6,8 +6,8 @@ export const OrderSummaryBar: React.FC = () => {
   const items = useCartStore((state) => state.items);
   const setIsCartOpen = useCartStore((state) => state.setIsCartOpen);
   
-  const totalItems = items.reduce((acc, item) => acc + item.quantity, 0);
-  const totalPrice = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  const totalItems = items.reduce((acc, item) => acc + item.cantidad, 0);
+  const totalPrice = items.reduce((acc, item) => acc + item.precio_prod * item.cantidad, 0);
 
   return (
     <AnimatePresence>

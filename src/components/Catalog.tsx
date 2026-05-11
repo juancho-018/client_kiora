@@ -82,9 +82,15 @@ export const Catalog: React.FC = () => {
         <>
           <div className="mb-6 flex justify-between items-center px-2">
             <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest">
-              {products.length} Productos Encontrados
+              {products.length} producto{products.length !== 1 ? 's' : ''} encontrado{products.length !== 1 ? 's' : ''}
             </span>
           </div>
+          {products.length === 0 ? (
+            <div className="rounded-[2rem] border border-dashed border-neutral-200 bg-white/80 py-20 text-center">
+              <p className="text-lg font-black text-neutral-700">No hay productos con estos filtros</p>
+              <p className="mt-2 text-sm text-neutral-400">Prueba otra categoría o limpia los filtros.</p>
+            </div>
+          ) : (
           <motion.div
             layout
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
@@ -99,6 +105,7 @@ export const Catalog: React.FC = () => {
               ))}
             </AnimatePresence>
           </motion.div>
+          )}
         </>
       )}
 

@@ -20,7 +20,9 @@ export const useCatalog = () => {
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
-      const matchesCategory = selectedCategory ? p.fk_cod_cat === selectedCategory : true;
+      const matchesCategory = selectedCategory
+        ? p.fk_cod_cat === selectedCategory || Boolean(p.fk_cod_cats?.includes(selectedCategory))
+        : true;
       const matchesSearch = fuzzyMatch(p.nom_prod, searchQuery);
       
       const price = p.precio_prod;

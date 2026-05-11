@@ -9,6 +9,6 @@ services:
     container_name: kiora_client_app
     restart: unless-stopped
     ports:
-      - "9090:80"
+      - "9095:80"
     extra_hosts:
       - "host.docker.internal:host-gateway"

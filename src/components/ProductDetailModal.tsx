@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { type Product } from '../services/ProductService';
 import { useCartStore } from '../store/cartStore';
+import { getImageUrl } from '../utils/getImageUrl';
 
 interface Props {
   product: Product;
@@ -43,7 +44,7 @@ export const ProductDetailModal: React.FC<Props> = ({ product, onClose }) => {
           {/* Product Image */}
           <div className="relative w-full md:w-1/2 aspect-[4/3] md:aspect-auto bg-white p-8 md:p-12 flex items-center justify-center border-b md:border-b-0 md:border-r border-neutral-100">
             <img 
-              src={product.imagen_prod || '/placeholder.png'} 
+              src={getImageUrl(product.imagen_prod) || '/placeholder.png'} 
               alt={product.nom_prod}
               className="w-full h-full object-contain"
             />

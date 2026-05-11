@@ -1,12 +1,22 @@
 # Stage 1: Build
 FROM node:22-alpine AS build
 
-# Environment variables for Astro build
-ARG PUBLIC_API_URL=http://localhost:3000/api
+# Variables PUBLIC_* se inyectan en tiempo de build (Astro las sustituye en el bundle).
+# Relativo: Nginx del stage 2 reenvía /api al gateway (ver nginx.conf).
+ARG PUBLIC_API_URL=/api
 ENV PUBLIC_API_URL=$PUBLIC_API_URL
 
-ARG PUBLIC_WEGLOT_API_KEY=wg_c28c17f31163d7786f2c5dde6f25201c5
+ARG PUBLIC_KIOSK_API_KEY=
+ENV PUBLIC_KIOSK_API_KEY=$PUBLIC_KIOSK_API_KEY
+
+ARG PUBLIC_WEGLOT_API_KEY=
 ENV PUBLIC_WEGLOT_API_KEY=$PUBLIC_WEGLOT_API_KEY
+
+ARG PUBLIC_SENTRY_DSN=
+ENV PUBLIC_SENTRY_DSN=$PUBLIC_SENTRY_DSN
+
+ARG SENTRY_AUTH_TOKEN=
+ENV SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN
 
 ENV ASTRO_TELEMETRY_DISABLED=1
 
