@@ -12,7 +12,7 @@ export const Cart: React.FC = () => {
   const { items, isOpen, toggleCart, updateQuantity, removeItem, clearCart } = useCartStore();
   const { refreshData } = useProductContext();
 
-  const [payment, setPayment] = useState<PaymentChoice>('efectivo');
+  const [payment, setPayment] = useState<PaymentChoice>('tarjeta_presencial');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successId, setSuccessId] = useState<number | null>(null);
@@ -30,12 +30,7 @@ export const Cart: React.FC = () => {
       return;
     }
 
-    const metodoLabel =
-      payment === 'efectivo'
-        ? 'efectivo'
-        : payment === 'tarjeta_presencial'
-          ? 'tarjeta_presencial'
-          : 'pendiente_caja';
+    const metodoLabel = 'tarjeta_presencial'; // STRICTLY CARD ONLY
 
     setSubmitting(true);
     try {
@@ -50,16 +45,30 @@ export const Cart: React.FC = () => {
       const id = created.id_vent;
       if (!id) throw new Error('Respuesta sin id de pedido');
 
-      await OrderService.completeOrder(id);
+      // Guardar información temporal para imprimir el recibo luego del redireccionamiento
+      localStorage.setItem('kiosk_last_order', JSON.stringify({
+        id_vent: id,
+        montofinal_vent: total,
+        estado: 'pagado',
+        metodopago_usu: 'Stripe (Digital)',
+        items: lines,
+      }));
 
-      setSuccessId(id);
-      clearCart();
-      void refreshData(true);
+      // Generar URL de Stripe
+      const successUrl = `${window.location.origin}/?payment=success&order_id=${id}`;
+      const cancelUrl = `${window.location.origin}/?payment=cancel&order_id=${id}`;
+      
+      const checkoutUrl = await OrderService.createCheckoutSession(id, successUrl, cancelUrl);
+      
+      if (!checkoutUrl) throw new Error('No se pudo generar el enlace de pago seguro');
+
+      // Redirigir al cliente a Stripe
+      window.location.href = checkoutUrl;
+
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'No se pudo registrar el pedido';
       setError(msg);
-    } finally {
-      setSubmitting(false);
+      setSubmitting(false); // Only set to false on error, because on success we redirect
     }
   };
 
@@ -156,26 +165,9 @@ export const Cart: React.FC = () => {
               <div className="space-y-4 border-t bg-neutral-50 p-6">
                 <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Forma de pago</p>
                 <div className="grid grid-cols-1 gap-2">
-                  {(
-                    [
-                      ['efectivo', 'Efectivo en caja'],
-                      ['tarjeta_presencial', 'Tarjeta en mostrador'],
-                      ['pendiente', 'Pagar después / revisar en caja'],
-                    ] as const
-                  ).map(([id, label]) => (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => setPayment(id)}
-                      className={`rounded-xl px-4 py-3 text-left text-sm font-bold transition-all ${
-                        payment === id
-                          ? 'bg-strawberry-red text-white shadow-lg shadow-strawberry-red/20'
-                          : 'bg-white text-neutral-600 ring-1 ring-neutral-200 hover:ring-strawberry-red/30'
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
+                  <div className="rounded-xl px-4 py-3 text-left text-sm font-bold bg-strawberry-red text-white shadow-lg shadow-strawberry-red/20 flex items-center justify-between">
+                    <span>💳 Pagar con Tarjeta (Único medio aceptado)</span>
+                  </div>
                 </div>
 
                 {error && (
