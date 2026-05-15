@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useCartStore } from '../store/cartStore';
 import { WelcomeScreen } from './WelcomeScreen';
@@ -6,11 +6,74 @@ import { Header } from './Header';
 import { Catalog } from './Catalog';
 import { Cart } from './Cart';
 import { OrderSummaryBar } from './OrderSummaryBar';
-
 import { ProductProvider } from '../context/ProductContext';
+import { ReceiptModal } from './ReceiptModal';
+import type { KioskReceiptData } from '../services/ReceiptPrinterService';
 
 export const KioskApp: React.FC = () => {
   const appStarted = useCartStore((state) => state.appStarted);
+  const setAppStarted = useCartStore((state) => state.setAppStarted);
+  const clearCart = useCartStore((state) => state.clearCart);
+  
+  const [successOrderId, setSuccessOrderId] = React.useState<string | null>(null);
+  const [paymentError, setPaymentError] = React.useState<string | null>(null);
+  const [showReceipt, setShowReceipt] = React.useState<boolean>(false);
+  const [receiptData, setReceiptData] = React.useState<KioskReceiptData | null>(null);
+  const [timeLeft, setTimeLeft] = React.useState<number>(60);
+
+  const resetKiosk = React.useCallback(() => {
+    setSuccessOrderId(null);
+    setPaymentError(null);
+    setShowReceipt(false);
+    setReceiptData(null);
+    localStorage.removeItem('kiosk_last_order');
+    setAppStarted(false); // Vuelve a la pantalla de bienvenida
+  }, [setAppStarted]);
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const payment = params.get('payment');
+    const orderId = params.get('order_id');
+    
+    if (payment === 'success' && orderId) {
+      setSuccessOrderId(orderId);
+      setAppStarted(true);
+      clearCart();
+      window.history.replaceState({}, '', window.location.pathname);
+
+      // Cargar info temporal para el recibo impreso
+      const saved = localStorage.getItem('kiosk_last_order');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (String(parsed.id_vent) === orderId) {
+            setReceiptData(parsed);
+          }
+        } catch(e) { console.error('Error parseando orden guardada', e); }
+      }
+    } else if (payment === 'cancel') {
+      setPaymentError('El pago fue cancelado o declinado. Por favor, intenta de nuevo o utiliza otra tarjeta.');
+      setAppStarted(true);
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [setAppStarted, clearCart]);
+
+  React.useEffect(() => {
+    let timer: number;
+    if (successOrderId || paymentError) {
+      setTimeLeft(60); // Iniciar cuenta regresiva en 60 segundos
+      timer = window.setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            resetKiosk();
+            return 60;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [successOrderId, paymentError, resetKiosk]);
 
   return (
     <ProductProvider>
@@ -40,6 +103,81 @@ export const KioskApp: React.FC = () => {
           <OrderSummaryBar />
           
           <Cart />
+
+          {/* Success Modal after Stripe Redirect */}
+          {successOrderId && (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 p-6 backdrop-blur-sm">
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="max-w-md rounded-[2rem] bg-white p-10 text-center shadow-2xl ring-1 ring-neutral-100"
+              >
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                  <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className="text-sm font-bold uppercase tracking-widest text-emerald-600">Pago exitoso en Stripe</p>
+                <p className="mt-4 text-4xl font-black text-neutral-900">#{successOrderId}</p>
+                <p className="mt-4 text-neutral-500">
+                  Tu orden ha sido pagada. Presenta este número en caja.
+                </p>
+                
+                <button
+                  type="button"
+                  onClick={() => setShowReceipt(true)}
+                  className="mt-8 w-full flex items-center justify-center gap-2 py-4 font-black uppercase bg-emerald-50 text-emerald-700 border-2 border-emerald-100 rounded-xl hover:bg-emerald-100 transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                  </svg>
+                  Imprimir Comprobante Físico
+                </button>
+                <button
+                  type="button"
+                  onClick={resetKiosk}
+                  className="mt-3 w-full py-4 font-black uppercase bg-strawberry-red text-white rounded-xl hover:opacity-90 transition-opacity"
+                >
+                  Continuar ({timeLeft}s)
+                </button>
+              </motion.div>
+            </div>
+          )}
+
+          {/* Error/Cancel Modal after Stripe Redirect */}
+          {paymentError && (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 p-6 backdrop-blur-sm">
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="max-w-md rounded-[2rem] bg-white p-10 text-center shadow-2xl ring-1 ring-neutral-100"
+              >
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100 text-red-600">
+                  <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </div>
+                <p className="text-sm font-bold uppercase tracking-widest text-red-600">Pago Fallido</p>
+                <p className="mt-4 text-neutral-600 font-medium">
+                  {paymentError}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setPaymentError(null)}
+                  className="mt-8 w-full py-4 font-black uppercase bg-neutral-200 text-neutral-700 rounded-xl hover:bg-neutral-300 transition-colors"
+                >
+                  Regresar al Kiosco
+                </button>
+              </motion.div>
+            </div>
+          )}
+
+          {showReceipt && successOrderId && (
+            <ReceiptModal
+              order={receiptData || ({ id_vent: Number(successOrderId), metodopago_usu: 'Stripe (Digital)', items: [] } as KioskReceiptData)}
+              onClose={() => setShowReceipt(false)}
+            />
+          )}
         </motion.div>
       )}
     </div>

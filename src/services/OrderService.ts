@@ -78,4 +78,17 @@ export class OrderService {
     if (!res.ok) throw new Error(await parseError(res));
     return (await res.json()) as CreatedOrder;
   }
+
+  /** Genera la sesión de Checkout de Stripe para pago digital. */
+  static async createCheckoutSession(orderId: number, successUrl: string, cancelUrl: string): Promise<string> {
+    const res = await fetch(`${getApiBase()}/orders/checkout/${orderId}`, {
+      method: 'POST',
+      headers: kioskHeaders(),
+      body: JSON.stringify({ success_url: successUrl, cancel_url: cancelUrl }),
+    });
+
+    if (!res.ok) throw new Error(await parseError(res));
+    const json = (await res.json()) as { checkoutUrl: string };
+    return json.checkoutUrl;
+  }
 }
