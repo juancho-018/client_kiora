@@ -18,24 +18,24 @@ export interface KioskReceiptData extends CreatedOrder {
 
 // ─── ESC/POS constants ────────────────────────────────────────────────────────
 const ESC = 0x1b;
-const GS  = 0x1d;
+const GS = 0x1d;
 
-const CMD_INIT              = [ESC, 0x40];
-const CMD_BOLD_ON           = [ESC, 0x45, 0x01];
-const CMD_BOLD_OFF          = [ESC, 0x45, 0x00];
-const CMD_ALIGN_LEFT        = [ESC, 0x61, 0x00];
-const CMD_ALIGN_CENTER      = [ESC, 0x61, 0x01];
-const CMD_ALIGN_RIGHT       = [ESC, 0x61, 0x02];
-const CMD_DOUBLE_HEIGHT_ON  = [ESC, 0x21, 0x10];
+const CMD_INIT = [ESC, 0x40];
+const CMD_BOLD_ON = [ESC, 0x45, 0x01];
+const CMD_BOLD_OFF = [ESC, 0x45, 0x00];
+const CMD_ALIGN_LEFT = [ESC, 0x61, 0x00];
+const CMD_ALIGN_CENTER = [ESC, 0x61, 0x01];
+const CMD_ALIGN_RIGHT = [ESC, 0x61, 0x02];
+const CMD_DOUBLE_HEIGHT_ON = [ESC, 0x21, 0x10];
 const CMD_DOUBLE_HEIGHT_OFF = [ESC, 0x21, 0x00];
-const CMD_CUT               = [GS, 0x56, 0x42, 0x00]; // Full cut (ESC/POS printers)
+const CMD_CUT = [GS, 0x56, 0x42, 0x00]; // Full cut (ESC/POS printers)
 
-// ─── BLE UUIDs for mini thermal printers ─────────────────────────────────────
-const BLE_PRINT_SERVICE      = '0000ff00-0000-1000-8000-00805f9b34fb';
-const BLE_PRINT_CHAR_WRITE   = '0000ff02-0000-1000-8000-00805f9b34fb'; // write
-const BLE_PRINT_CHAR_NOTIFY  = '0000ff01-0000-1000-8000-00805f9b34fb'; // notify
-const BLE_ALT_SERVICE        = '0000ae30-0000-1000-8000-00805f9b34fb';
-const BLE_ALT_CHAR_WRITE     = '0000ae01-0000-1000-8000-00805f9b34fb';
+// ─── BLE UUIDs for mini thermal printers ────────────/*  */─────────────────────────
+const BLE_PRINT_SERVICE = '0000ff00-0000-1000-8000-00805f9b34fb';
+const BLE_PRINT_CHAR_WRITE = '0000ff02-0000-1000-8000-00805f9b34fb'; // write
+const BLE_PRINT_CHAR_NOTIFY = '0000ff01-0000-1000-8000-00805f9b34fb'; // notify
+const BLE_ALT_SERVICE = '0000ae30-0000-1000-8000-00805f9b34fb';
+const BLE_ALT_CHAR_WRITE = '0000ae01-0000-1000-8000-00805f9b34fb';
 
 const PAPER_WIDTH_CHARS = 32;
 
@@ -63,14 +63,14 @@ function divider(char = '-', width = PAPER_WIDTH_CHARS): number[] {
 
 // ─── ESC/POS ticket builder ───────────────────────────────────────────────────
 function buildEscPosTicket(order: KioskReceiptData, businessName = 'KIORA'): Uint8Array {
-  const items  = order.items ?? [];
-  const total  = Number(order.montofinal_vent ?? 0);
-  const date   = order.fecha_vent
+  const items = order.items ?? [];
+  const total = Number(order.montofinal_vent ?? 0);
+  const date = order.fecha_vent
     ? new Date(order.fecha_vent).toLocaleString('es-CO')
     : new Date().toLocaleString('es-CO');
   const method = (order.metodopago_usu ?? 'Efectivo').toUpperCase();
-  const idStr  = String(order.id_vent ?? '0').padStart(6, '0');
-  const W      = PAPER_WIDTH_CHARS;
+  const idStr = String(order.id_vent ?? '0').padStart(6, '0');
+  const W = PAPER_WIDTH_CHARS;
 
   const buf: number[] = [
     ...CMD_INIT,
@@ -93,9 +93,9 @@ function buildEscPosTicket(order: KioskReceiptData, businessName = 'KIORA'): Uin
   ];
 
   for (const item of items) {
-    const name     = (item.nom_prod ?? `Prod #${item.cod_prod}`).slice(0, 16);
-    const qty      = String(item.cantidad);
-    const price    = `$${Number(item.precio_unit).toLocaleString('es-CO')}`;
+    const name = (item.nom_prod ?? `Prod #${item.cod_prod}`).slice(0, 16);
+    const qty = String(item.cantidad);
+    const price = `$${Number(item.precio_unit).toLocaleString('es-CO')}`;
     const subtotal = `$${(item.cantidad * Number(item.precio_unit)).toLocaleString('es-CO')}`;
     buf.push(...Array.from(encode(
       padEnd(name, 16) + padStart(qty, 4) + padStart(price, 6) + padStart(subtotal, 6) + '\n'
@@ -120,15 +120,15 @@ function buildEscPosTicket(order: KioskReceiptData, businessName = 'KIORA'): Uin
 
 // ─── BLE mini printer packet builder ─────────────────────────────────────────
 function buildBlePackets(order: KioskReceiptData, businessName = 'KIORA'): Uint8Array[] {
-  const items  = order.items ?? [];
-  const total  = Number(order.montofinal_vent ?? 0);
-  const date   = order.fecha_vent
+  const items = order.items ?? [];
+  const total = Number(order.montofinal_vent ?? 0);
+  const date = order.fecha_vent
     ? new Date(order.fecha_vent).toLocaleString('es-CO')
     : new Date().toLocaleString('es-CO');
   const method = (order.metodopago_usu ?? 'Efectivo').toUpperCase();
-  const idStr  = String(order.id_vent ?? '0').padStart(6, '0');
-  const W      = PAPER_WIDTH_CHARS;
-  const SEP    = '-'.repeat(W) + '\n';
+  const idStr = String(order.id_vent ?? '0').padStart(6, '0');
+  const W = PAPER_WIDTH_CHARS;
+  const SEP = '-'.repeat(W) + '\n';
 
   let text = '';
   text += `\n`;
@@ -143,8 +143,8 @@ function buildBlePackets(order: KioskReceiptData, businessName = 'KIORA'): Uint8
   text += SEP;
 
   for (const item of items) {
-    const name     = (item.nom_prod ?? `Prod #${item.cod_prod}`).slice(0, 16);
-    const qty      = String(item.cantidad);
+    const name = (item.nom_prod ?? `Prod #${item.cod_prod}`).slice(0, 16);
+    const qty = String(item.cantidad);
     const subtotal = `$${(item.cantidad * Number(item.precio_unit)).toLocaleString('es-CO')}`;
     text += padEnd(name, 16) + padStart(qty, 4) + padStart(subtotal, 12) + '\n';
   }
@@ -156,9 +156,9 @@ function buildBlePackets(order: KioskReceiptData, businessName = 'KIORA'): Uint8
   text += `    *** ${idStr} ***\n`;
   text += '\n\n\n';
 
-  const full    = encode(text);
+  const full = encode(text);
   const packets: Uint8Array[] = [];
-  const CHUNK   = 20;
+  const CHUNK = 20;
   for (let i = 0; i < full.length; i += CHUNK) {
     packets.push(full.slice(i, i + CHUNK));
   }
@@ -178,9 +178,9 @@ export class ReceiptPrinterService {
   isWebBluetoothSupported(): boolean { return 'bluetooth' in navigator; }
 
   generateReceiptHTML(order: KioskReceiptData, businessName = 'KIORA'): string {
-    const items  = order.items ?? [];
-    const total  = Number(order.montofinal_vent ?? 0);
-    const date   = order.fecha_vent
+    const items = order.items ?? [];
+    const total = Number(order.montofinal_vent ?? 0);
+    const date = order.fecha_vent
       ? new Date(order.fecha_vent).toLocaleString('es-CO')
       : new Date().toLocaleString('es-CO');
     const method = (order.metodopago_usu ?? 'Efectivo').toUpperCase();
@@ -251,7 +251,7 @@ export class ReceiptPrinterService {
 
   printWithBrowser(order: KioskReceiptData, businessName = 'KIORA'): void {
     const html = this.generateReceiptHTML(order, businessName);
-    const win  = window.open('', '_blank', 'width=420,height=700,toolbar=0,scrollbars=0,status=0');
+    const win = window.open('', '_blank', 'width=420,height=700,toolbar=0,scrollbars=0,status=0');
     if (!win) { alert('Permite las ventanas emergentes de este sitio para imprimir.'); return; }
     win.document.write(html);
     win.document.close();
@@ -287,15 +287,15 @@ export class ReceiptPrinterService {
 
   async printWithSerial(order: KioskReceiptData, businessName = 'KIORA'): Promise<void> {
     if (!this.serialPort) throw new Error('Puerto serial no conectado');
-    const data   = buildEscPosTicket(order, businessName);
+    const data = buildEscPosTicket(order, businessName);
     const writer = this.serialPort.writable!.getWriter();
-    try { 
-      await writer.write(data); 
-    } finally { 
-      writer.releaseLock(); 
+    try {
+      await writer.write(data);
+    } finally {
+      writer.releaseLock();
       try {
         await this.serialPort.close();
-      } catch(e) {}
+      } catch (e) { }
       this.serialPort = null;
     }
   }
@@ -307,27 +307,80 @@ export class ReceiptPrinterService {
       this.bleDevice = await (navigator as any).bluetooth.requestDevice({
         filters: [
           { services: [BLE_PRINT_SERVICE] }, { services: [BLE_ALT_SERVICE] },
-          { namePrefix: 'Peripage' }, { namePrefix: 'Phomemo' }, { namePrefix: 'MX10' },
-          { namePrefix: 'MX' }, { namePrefix: 'GB' }, { namePrefix: 'Cat' }, { namePrefix: 'Paperang' },
+          { services: ['0000ae30-0000-1000-8000-00805f9b34fb'] },
+          { namePrefix: 'Peripage' }, { namePrefix: 'Phomemo' }, { namePrefix: 'MX' },
+          { namePrefix: 'GB' }, { namePrefix: 'Cat' }, { namePrefix: 'Paperang' },
+          { namePrefix: 'BlePrinter' }, { namePrefix: 'M02' }, { namePrefix: 'A6' },
+          { namePrefix: 'Small' }, { namePrefix: 'Thermal' }, { namePrefix: 'MPT' },
         ],
-        optionalServices: [BLE_PRINT_SERVICE, BLE_ALT_SERVICE],
+        optionalServices: [
+          BLE_PRINT_SERVICE,
+          BLE_ALT_SERVICE,
+          '0000ae30-0000-1000-8000-00805f9b34fb',
+          '000018f0-0000-1000-8000-00805f9b34fb',
+          '49535343-fe7d-4158-b296-14606b9b4392',
+          'e7e11001-4997-4679-bf4d-321b267dd923'
+        ],
       });
 
+      console.log('[ReceiptPrinter] Connecting to GATT server...');
       const server = await this.bleDevice!.gatt!.connect();
-      let service: BluetoothRemoteGATTService | undefined;
-      let charUuid = BLE_PRINT_CHAR_WRITE;
-      try {
-        service = await server.getPrimaryService(BLE_PRINT_SERVICE);
-      } catch {
-        service = await server.getPrimaryService(BLE_ALT_SERVICE);
-        charUuid = BLE_ALT_CHAR_WRITE;
+
+      // Helper para timeout
+      const withTimeout = (promise: Promise<any>, ms: number) => {
+        return Promise.race([
+          promise,
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms))
+        ]);
+      };
+
+      console.log('[ReceiptPrinter] Discovering services with timeout...');
+
+      // 1. Try known print services one by one
+      const knownServices = [
+        '0000ae30-0000-1000-8000-00805f9b34fb', // Common iPrint/Xprinter
+        '0000ff00-0000-1000-8000-00805f9b34fb', // Generic
+        '000018f0-0000-1000-8000-00805f9b34fb', // Alternative
+        '49535343-fe7d-4158-b296-14606b9b4392', // Microchip/Generic
+        'e7e11001-4997-4679-bf4d-321b267dd923'  // Peripage/Paperang
+      ];
+
+      for (const serviceUuid of knownServices) {
+        try {
+          console.log(`[ReceiptPrinter] Trying service: ${serviceUuid}`);
+          const service = await withTimeout(server.getPrimaryService(serviceUuid), 3000);
+          console.log(`[ReceiptPrinter] Found service: ${serviceUuid}, searching characteristics...`);
+          const chars = await withTimeout(service.getCharacteristics(), 3000);
+          const writeChar = chars.find((c: any) => c.properties.write || c.properties.writeWithoutResponse);
+          if (writeChar) {
+            console.log('[ReceiptPrinter] SUCCESS! Found write characteristic:', writeChar.uuid);
+            this.bleChar = writeChar;
+            return true;
+          }
+        } catch (e) {
+          console.warn(`[ReceiptPrinter] Service ${serviceUuid} failed or timeout`);
+        }
       }
-      this.bleChar = await service.getCharacteristic(charUuid);
-      return true;
-    } catch (e) {
-      console.warn('[ReceiptPrinter] BLE connect failed:', e);
+
+      // 2. Last resort: full discovery (only if everything else fails)
+      console.log('[ReceiptPrinter] Full discovery fallback...');
+      const allServices = await withTimeout(server.getPrimaryServices(), 5000);
+      for (const service of allServices) {
+        try {
+          const chars = await service.getCharacteristics();
+          const writeChar = chars.find((c: any) => c.properties.write || c.properties.writeWithoutResponse);
+          if (writeChar) {
+            this.bleChar = writeChar;
+            return true;
+          }
+        } catch (e) { }
+      }
+
+      throw new Error('No se encontró un canal de escritura compatible.');
+    } catch (e: any) {
+      console.error('[ReceiptPrinter] BLE error:', e);
       this.bleDevice = null;
-      this.bleChar   = null;
+      this.bleChar = null;
       return false;
     }
   }
@@ -335,7 +388,7 @@ export class ReceiptPrinterService {
   async disconnectBluetooth(): Promise<void> {
     if (this.bleDevice?.gatt?.connected) this.bleDevice.gatt.disconnect();
     this.bleDevice = null;
-    this.bleChar   = null;
+    this.bleChar = null;
   }
 
   async printWithBluetooth(order: KioskReceiptData, businessName = 'KIORA'): Promise<void> {

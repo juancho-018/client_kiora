@@ -1,123 +1,91 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-const TAGS = [
-  { id: 'Comida', label: 'Comida', icon: '🍔' },
-  { id: 'Bebida', label: 'Bebida', icon: '🥤' },
-  { id: 'Dulce', label: 'Dulce', icon: '🍬' },
-  { id: 'Snack', label: 'Snack', icon: '🍿' },
-  { id: 'Fruta', label: 'Fruta', icon: '🍎' },
-  { id: 'Lacteo', label: 'Lácteo', icon: '🥛' },
-  { id: 'Aseo', label: 'Aseo', icon: '🧼' },
-] as const;
+import type { Category } from '../services/ProductService';
 
 interface FilterPanelProps {
   show: boolean;
+  categories: Category[];
   filters: {
     minPrice: number;
     maxPrice: number;
     stockStatus: string;
-    selectedTags: string[];
+    selectedCategories: number[];
   };
   setFilters: (filters: any) => void;
   resetFilters: () => void;
 }
 
-export const FilterPanel: React.FC<FilterPanelProps> = ({ show, filters, setFilters, resetFilters }) => {
+export const FilterPanel: React.FC<FilterPanelProps> = ({ show, categories, filters, setFilters, resetFilters }) => {
   return (
     <AnimatePresence>
-        {show && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden mb-10"
-          >
-            <div className="bg-white rounded-[2rem] p-8 border border-neutral-100 shadow-xl grid grid-cols-1 md:grid-cols-3 gap-10">
-              {/* Tags */}
-              <div className="space-y-4">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">Etiquetas</span>
-                <div className="flex flex-wrap gap-2">
-                  {TAGS.map(t => (
-                    <button
-                      key={t.id}
-                      onClick={() => {
-                        const newTags = filters.selectedTags.includes(t.id)
-                          ? filters.selectedTags.filter(x => x !== t.id)
-                          : [...filters.selectedTags, t.id];
-                        setFilters({ ...filters, selectedTags: newTags });
-                      }}
-                      className={`px-3 py-2 rounded-lg text-xs font-bold transition-all ${
-                        filters.selectedTags.includes(t.id)
-                          ? 'bg-strawberry-red text-white shadow-md'
-                          : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
-                      }`}
-                    >
-                      {t.icon} {t.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+      {show && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          className="overflow-hidden mb-10"
+        >
+          <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-xl flex flex-col gap-8">
 
-              {/* Price Range */}
-              <div className="space-y-4">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">Rango de Precio</span>
+            {/* Categorías — full width, pills fluidas */}
+            <div className="space-y-3">
+              <span className="text-xs font-black uppercase tracking-[0.15em] text-slate-600">Categorías</span>
+              <div className="flex flex-wrap gap-2">
+                {categories.map(c => (
+                  <button
+                    key={c.cod_cat}
+                    onClick={() => {
+                      const newCats = filters.selectedCategories.includes(c.cod_cat)
+                        ? filters.selectedCategories.filter(x => x !== c.cod_cat)
+                        : [...filters.selectedCategories, c.cod_cat];
+                      setFilters({ ...filters, selectedCategories: newCats });
+                    }}
+                    className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 active:scale-95 ${
+                      filters.selectedCategories.includes(c.cod_cat)
+                        ? 'bg-[#ec131e] text-white shadow-md shadow-[#ec131e]/20'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    {c.nom_cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Rango de precio + Limpiar en la misma fila */}
+            <div className="flex flex-wrap items-end gap-6">
+              <div className="flex-1 min-w-[220px] space-y-3">
+                <span className="text-xs font-black uppercase tracking-[0.15em] text-slate-600">Rango de Precio</span>
                 <div className="flex items-center gap-3">
                   <input
                     type="number"
                     placeholder="Mín"
                     value={filters.minPrice || ''}
                     onChange={(e) => setFilters({ ...filters, minPrice: Number(e.target.value) })}
-                    className="w-full px-4 py-2 bg-neutral-100 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-strawberry-red/20"
+                    className="w-full px-4 py-2.5 bg-slate-100 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-[#ec131e]/20 text-slate-700"
                   />
-                  <span className="text-neutral-300">—</span>
+                  <span className="text-slate-400 shrink-0">—</span>
                   <input
                     type="number"
                     placeholder="Máx"
                     value={filters.maxPrice || ''}
                     onChange={(e) => setFilters({ ...filters, maxPrice: Number(e.target.value) })}
-                    className="w-full px-4 py-2 bg-neutral-100 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-strawberry-red/20"
+                    className="w-full px-4 py-2.5 bg-slate-100 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-[#ec131e]/20 text-slate-700"
                   />
                 </div>
               </div>
 
-              {/* Stock Status */}
-              <div className="space-y-4">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">Estado</span>
-                <div className="flex gap-2">
-                  {[
-                    { id: '', label: 'Todo' },
-                    { id: 'disponible', label: '✅ Disponible' },
-                    { id: 'bajo', label: '⚠️ Bajo' },
-                    { id: 'agotado', label: '❌ Agotado' },
-                  ].map(s => (
-                    <button
-                      key={s.id}
-                      onClick={() => setFilters({ ...filters, stockStatus: s.id as any })}
-                      className={`flex-1 px-2 py-2 rounded-lg text-[10px] font-bold uppercase tracking-tighter transition-all ${
-                        filters.stockStatus === s.id
-                          ? 'bg-neutral-900 text-white'
-                          : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
-                      }`}
-                    >
-                      {s.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Reset */}
-              <div className="md:col-span-3 pt-4 border-t border-neutral-50 flex justify-end">
-                <button
-                  onClick={resetFilters}
-                  className="text-xs font-black text-neutral-400 hover:text-strawberry-red transition-all flex items-center gap-2"
-                >
-                  Limpiar Filtros
-                </button>
-              </div>
+              <button
+                onClick={resetFilters}
+                className="shrink-0 text-xs font-black text-slate-400 hover:text-[#ec131e] transition-all py-2.5"
+              >
+                Limpiar filtros
+              </button>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };

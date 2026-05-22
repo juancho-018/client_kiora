@@ -81,9 +81,7 @@ export class ProductService {
 
     try {
       do {
-        // WORKAROUND: Añadimos /api/products al final porque el API Gateway tiene
-        // un bug en su pathRewrite que recorta la ruta base y envía lo que sobra tal cual.
-        const url = `${publicPrefix()}/products/api/products?page=${page}&limit=${limit}`;
+        const url = `${publicPrefix()}/products?page=${page}&limit=${limit}`;
         const json = (await fetchJson(url)) as {
           data?: unknown[];
           pagination?: { totalPages?: number };
@@ -111,8 +109,7 @@ export class ProductService {
 
     try {
       do {
-        // WORKAROUND: Añadimos /api/categories al final por el bug en el API Gateway.
-        const url = `${publicPrefix()}/categories/api/categories?page=${page}&limit=${limit}`;
+        const url = `${publicPrefix()}/categories?page=${page}&limit=${limit}`;
         const json = (await fetchJson(url)) as {
           data?: unknown[];
           pagination?: { totalPages?: number };
@@ -134,7 +131,7 @@ export class ProductService {
 
   static async getProductById(id: number): Promise<Product | null> {
     try {
-      const json = (await fetchJson(`${publicPrefix()}/products/api/products/${id}`)) as Record<string, unknown>;
+      const json = (await fetchJson(`${publicPrefix()}/products/${id}`)) as Record<string, unknown>;
       return normalizeProduct(json);
     } catch {
       return null;
