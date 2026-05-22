@@ -2,16 +2,8 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useCartStore } from '../store/cartStore';
 import { type Product } from '../services/ProductService';
+import { getImageUrl } from '../utils/getImageUrl';
 
-const TAGS = [
-  { id: 'Comida', label: 'Comida', icon: '🍔' },
-  { id: 'Bebida', label: 'Bebida', icon: '🥤' },
-  { id: 'Dulce', label: 'Dulce', icon: '🍬' },
-  { id: 'Snack', label: 'Snack', icon: '🍿' },
-  { id: 'Fruta', label: 'Fruta', icon: '🍎' },
-  { id: 'Lacteo', label: 'Lácteo', icon: '🥛' },
-  { id: 'Aseo', label: 'Aseo', icon: '🧼' },
-] as const;
 
 interface Props {
   product: Product;
@@ -19,7 +11,11 @@ interface Props {
 }
 
 const Plus = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">.
+
+
+
+
     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
   </svg>
 );
@@ -32,7 +28,7 @@ export const ProductCard: React.FC<Props> = ({ product, onSelect }) => {
     addItem(product);
   };
 
-  const isLowStock = product.stock_actual !== undefined && product.stock_minimo !== undefined && product.stock_actual <= product.stock_minimo;
+
 
   return (
     <motion.div
@@ -40,47 +36,29 @@ export const ProductCard: React.FC<Props> = ({ product, onSelect }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       onClick={() => onSelect(product)}
-      className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 cursor-pointer flex flex-col group p-0 border border-neutral-100"
+      className="bg-white rounded-[2rem] overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer flex flex-col group p-0 border border-slate-200/60 ring-1 ring-slate-900/5"
     >
-      <div className="relative aspect-[4/3] overflow-hidden bg-white mb-0 p-4">
+      <div className="relative w-full h-[180px] overflow-hidden bg-[#f5f0eb] mb-0 p-6 flex items-center justify-center border-b border-slate-100/80">
         <img
-          src={product.imagen_prod || '/placeholder.png'}
+          src={getImageUrl(product.imagen_prod) || '/placeholder.png'}
           alt={product.nom_prod}
-          className="w-full h-full object-contain transition-all duration-700"
+          className="w-full h-full object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-110"
         />
-        {isLowStock && (
-          <div className="absolute top-4 left-4 bg-strawberry-red text-white text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-widest shadow-lg">
-            Bajo Stock
-          </div>
-        )}
       </div>
-      
+
       <div className="p-5 pt-2 flex-1 flex flex-col justify-between">
         <div>
-          <div className="flex flex-wrap gap-1 mb-2">
-            {product.tipos_prod?.map(t => {
-              const tag = TAGS.find(x => x.id === t);
-              return (
-                <span key={t} className="text-[9px] font-bold text-neutral-400 uppercase tracking-tighter bg-neutral-50 px-1.5 py-0.5 rounded">
-                  {tag?.icon} {t}
-                </span>
-              );
-            })}
-          </div>
-          <h3 className="text-lg font-bold text-neutral-800 line-clamp-2 leading-tight mb-2">{product.nom_prod}</h3>
-          <p className="text-xs text-neutral-500 font-bold mb-4">
-            Stock disponible: <span className={isLowStock ? 'text-strawberry-red' : 'text-emerald-500'}>{product.stock_actual ?? 0}</span>
-          </p>
+          <h3 className="text-lg font-black text-slate-800 line-clamp-2 leading-tight mb-3">{product.nom_prod}</h3>
         </div>
-        
+
         <div className="flex items-center justify-between">
           <span className="text-xl font-bold text-strawberry-red">
             ${product.precio_prod.toLocaleString()}
           </span>
-          
+
           <button
             onClick={handleAdd}
-            className="w-10 h-10 bg-strawberry-red text-white flex items-center justify-center rounded-full shadow-lg shadow-strawberry-red/30 hover:scale-110 active:scale-95 transition-all"
+            className="w-10 h-10 bg-gradient-to-tr from-emerald-500 to-teal-400 text-white flex items-center justify-center rounded-full shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:-translate-y-1 hover:scale-110 active:scale-95 transition-all duration-300"
           >
             <Plus className="w-6 h-6" />
           </button>

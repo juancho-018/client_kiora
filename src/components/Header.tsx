@@ -4,7 +4,7 @@ import { useCartStore } from '../store/cartStore';
 
 export const Header: React.FC = () => {
   const { items, setAppStarted, searchQuery, setSearchQuery } = useCartStore();
-  const itemCount = items.reduce((acc, item) => acc + item.quantity, 0);
+  const itemCount = items.reduce((acc, item) => acc + item.cantidad, 0);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 px-6 py-6">

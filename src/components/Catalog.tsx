@@ -23,41 +23,14 @@ export const Catalog: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-6 pb-32">
-      {/* Search & Filters Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-        {/* Category Pills */}
-        <div className="flex gap-2 overflow-x-auto no-scrollbar py-2">
-          <button
-            onClick={() => setSelectedCategory(null)}
-            className={`px-6 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap text-xs uppercase tracking-widest ${
-              selectedCategory === null
-                ? 'bg-strawberry-red text-white shadow-lg shadow-strawberry-red/20'
-                : 'bg-white text-neutral-500 hover:bg-neutral-100'
-            }`}
-          >
-             Todos
-          </button>
-          {categories.map((cat) => (
-            <button
-              key={cat.cod_cat}
-              onClick={() => setSelectedCategory(cat.cod_cat)}
-              className={`px-6 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap text-xs uppercase tracking-widest ${
-                selectedCategory === cat.cod_cat
-                  ? 'bg-strawberry-red text-white shadow-lg shadow-strawberry-red/20'
-                  : 'bg-white text-neutral-500 hover:bg-neutral-100'
-              }`}
-            >
-              {cat.nom_cat}
-            </button>
-          ))}
-        </div>
-
+      {/* Filters Toolbar */}
+      <div className="flex items-center justify-end gap-4 mb-8">
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all border-2 ${
-            showFilters || filters.selectedTags.length > 0 || filters.stockStatus !== '' || filters.minPrice > 0
-              ? 'border-strawberry-red text-strawberry-red bg-strawberry-red/5'
-              : 'border-neutral-200 text-neutral-500 hover:bg-neutral-50'
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all duration-300 border-2 active:scale-95 ${
+            showFilters || filters.selectedCategories.length > 0 || filters.minPrice > 0
+              ? 'border-[#ec131e] text-[#ec131e] bg-[#ec131e]/5'
+              : 'border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300'
           }`}
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -69,22 +42,38 @@ export const Catalog: React.FC = () => {
 
       <FilterPanel 
         show={showFilters} 
+        categories={categories}
         filters={filters} 
         setFilters={setFilters} 
         resetFilters={resetFilters} 
       />
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-4 opacity-50">
-          <div className="w-12 h-12 border-4 border-strawberry-red/20 border-t-strawberry-red rounded-full animate-spin"></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-in fade-in duration-500">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <div key={i} className="bg-white rounded-[2rem] border border-slate-50 flex flex-col overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+              <div className="h-[160px] bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 animate-pulse"></div>
+              <div className="p-5 flex flex-col gap-3 flex-1">
+                <div className="w-1/3 h-4 rounded-full bg-slate-100 animate-pulse"></div>
+                <div className="w-3/4 h-6 rounded-full bg-slate-100 animate-pulse"></div>
+                <div className="w-1/2 h-4 rounded-full bg-slate-100 animate-pulse mt-auto"></div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : (
         <>
           <div className="mb-6 flex justify-between items-center px-2">
-            <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest">
-              {products.length} Productos Encontrados
+            <span className="text-xs font-bold text-slate-600 uppercase tracking-widest">
+              {products.length} producto{products.length !== 1 ? 's' : ''} encontrado{products.length !== 1 ? 's' : ''}
             </span>
           </div>
+          {products.length === 0 ? (
+            <div className="rounded-[2rem] border border-dashed border-neutral-200 bg-white/80 py-20 text-center">
+              <p className="text-lg font-black text-neutral-700">No hay productos con estos filtros</p>
+              <p className="mt-2 text-sm text-neutral-400">Prueba otra categoría o limpia los filtros.</p>
+            </div>
+          ) : (
           <motion.div
             layout
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
@@ -99,6 +88,7 @@ export const Catalog: React.FC = () => {
               ))}
             </AnimatePresence>
           </motion.div>
+          )}
         </>
       )}
 

@@ -2,7 +2,11 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useCartStore } from '../store/cartStore';
 
-export const WelcomeScreen: React.FC = () => {
+interface WelcomeScreenProps {
+  onOpenManual?: () => void;
+}
+
+export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onOpenManual }) => {
   const setAppStarted = useCartStore((state) => state.setAppStarted);
 
   const handleLanguageChange = (lang: string) => {
@@ -71,6 +75,16 @@ export const WelcomeScreen: React.FC = () => {
             </button>
           </div>
         </motion.div>
+
+        {/* Manual Check Button */}
+        <div className="absolute bottom-10 right-10">
+          <button 
+            onClick={onOpenManual}
+            className="text-[10px] font-black uppercase tracking-[0.2em] bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg border border-white/20 transition-all opacity-50 hover:opacity-100"
+          >
+            Consultar Pedido Manual
+          </button>
+        </div>
       </div>
 
       {/* Decorative Blur - Added pointer-events-none to avoid click blocking */}
