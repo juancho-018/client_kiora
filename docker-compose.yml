@@ -7,6 +7,7 @@ services:
         - PUBLIC_API_URL=${PUBLIC_API_URL:-http://localhost:3000/api}
         - PUBLIC_KIOSK_API_KEY=${PUBLIC_KIOSK_API_KEY:-kiosk_secret_key_2024}
         - PUBLIC_WEGLOT_API_KEY=${PUBLIC_WEGLOT_API_KEY:-wg_c28c17f31163d7786f2c5dde6f25201c5}
+        - PUBLIC_KIOSK_URL=${PUBLIC_KIOSK_URL:-http://localhost:9095}
     container_name: kiora_client_app
     restart: unless-stopped
     ports:

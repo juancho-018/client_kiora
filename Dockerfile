@@ -12,6 +12,9 @@ ENV PUBLIC_KIOSK_API_KEY=$PUBLIC_KIOSK_API_KEY
 ARG PUBLIC_WEGLOT_API_KEY=
 ENV PUBLIC_WEGLOT_API_KEY=$PUBLIC_WEGLOT_API_KEY
 
+ARG PUBLIC_KIOSK_URL=
+ENV PUBLIC_KIOSK_URL=$PUBLIC_KIOSK_URL
+
 ARG PUBLIC_SENTRY_DSN=
 ENV PUBLIC_SENTRY_DSN=$PUBLIC_SENTRY_DSN
 
@@ -22,9 +25,9 @@ ENV ASTRO_TELEMETRY_DISABLED=1
 
 WORKDIR /app
 
-# Install dependencies
+# Install dependencies (locked versions for reproducibility)
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci --ignore-scripts
 
 # Copy source and build
 COPY . .

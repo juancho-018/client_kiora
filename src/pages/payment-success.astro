@@ -1,0 +1,8 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { PaymentSuccess } from '../components/PaymentSuccess';
+---
+
+<Layout title="Pago Completado - Kiora">
+	<PaymentSuccess client:only="react" />
+</Layout>

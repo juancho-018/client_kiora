@@ -27,6 +27,12 @@ export interface CreatedOrder {
   montofinal_vent?: number;
   estado?: string;
   metodopago_usu?: string;
+  items?: {
+    cod_prod: number;
+    nom_prod?: string;
+    cantidad: number;
+    precio_unit: number;
+  }[];
 }
 
 async function parseError(res: Response): Promise<string> {
@@ -69,10 +75,24 @@ export class OrderService {
 
   /** Completa la venta y ejecuta la saga de inventario (descuenta stock). */
   static async completeOrder(orderId: number): Promise<CreatedOrder> {
+    return this.updateOrderStatus(orderId, 'completada');
+  }
+
+  static async updateOrderStatus(orderId: number, estado: string): Promise<CreatedOrder> {
     const res = await fetch(`${getApiBase()}/orders/${orderId}/status`, {
       method: 'PUT',
       headers: kioskHeaders(),
-      body: JSON.stringify({ estado: 'completada' }),
+      body: JSON.stringify({ estado }),
+    });
+
+    if (!res.ok) throw new Error(await parseError(res));
+    return (await res.json()) as CreatedOrder;
+  }
+
+  static async getOrderById(orderId: number): Promise<CreatedOrder> {
+    const res = await fetch(`${getApiBase()}/orders/${orderId}`, {
+      method: 'GET',
+      headers: kioskHeaders(),
     });
 
     if (!res.ok) throw new Error(await parseError(res));
@@ -90,5 +110,16 @@ export class OrderService {
     if (!res.ok) throw new Error(await parseError(res));
     const json = (await res.json()) as { checkoutUrl: string };
     return json.checkoutUrl;
+  }
+
+  /** Verifica con Stripe si el pago fue completado y actualiza el estado en la BD (sin webhook). */
+  static async verifyPayment(orderId: number): Promise<{ status: string; already_done?: boolean }> {
+    const res = await fetch(`${getApiBase()}/orders/checkout/${orderId}/verify`, {
+      method: 'GET',
+      headers: kioskHeaders(),
+    });
+
+    if (!res.ok) throw new Error(await parseError(res));
+    return (await res.json()) as { status: string; already_done?: boolean };
   }
 }

@@ -15,7 +15,7 @@ export const useCatalog = () => {
     minPrice: 0,
     maxPrice: 500000,
     stockStatus: '' as 'disponible' | 'bajo' | 'agotado' | '',
-    selectedTags: [] as string[],
+    selectedCategories: [] as number[],
   });
 
   const filteredProducts = useMemo(() => {
@@ -36,16 +36,16 @@ export const useCatalog = () => {
         filters.stockStatus === 'bajo' ? isLow :
         filters.stockStatus === 'agotado' ? stock === 0 : true;
 
-      const matchesTags = filters.selectedTags.length === 0 
+      const matchesFilterCategories = filters.selectedCategories.length === 0 
         ? true 
-        : filters.selectedTags.every(t => p.tipos_prod?.includes(t));
+        : filters.selectedCategories.some(catId => p.fk_cod_cat === catId || Boolean(p.fk_cod_cats?.includes(catId)));
 
-      return matchesCategory && matchesSearch && matchesPrice && matchesStock && matchesTags;
+      return matchesCategory && matchesSearch && matchesPrice && matchesStock && matchesFilterCategories;
     });
   }, [products, selectedCategory, searchQuery, filters]);
 
   const resetFilters = () => {
-    setFilters({ minPrice: 0, maxPrice: 500000, stockStatus: '', selectedTags: [] });
+    setFilters({ minPrice: 0, maxPrice: 500000, stockStatus: '', selectedCategories: [] });
     setSelectedCategory(null);
     useCartStore.getState().setSearchQuery('');
   };

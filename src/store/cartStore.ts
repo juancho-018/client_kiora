@@ -4,6 +4,7 @@ import type { Product } from '../services/ProductService';
 interface CartItem {
   cod_prod: number;
   nom_prod: string;
+  desc_prod?: string;
   precio_prod: number;
   imagen_prod: string;
   cantidad: number;
@@ -50,6 +51,7 @@ export const useCartStore = create<CartState>((set) => ({
       const row: CartItem = {
         cod_prod: productId,
         nom_prod: product.nom_prod,
+        desc_prod: product.desc_prod,
         precio_prod: product.precio_prod,
         imagen_prod: product.imagen_prod,
         cantidad: nextQty,

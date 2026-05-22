@@ -9,9 +9,13 @@ export function getImageUrl(path?: string | null): string {
   if (path.startsWith('data:')) return path;
 
   const apiBase = getApiBase();
-  const IMG_BASE = apiBase.startsWith('http') ? apiBase.replace(/\/api\/?$/, '') : '';
+  const IMG_BASE = apiBase.startsWith('http') ? apiBase.replace(/\/api(\/v1)?\/?$/, '') : '';
 
   const cleanBase = IMG_BASE.endsWith('/') ? IMG_BASE.slice(0, -1) : IMG_BASE;
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  let cleanPath = path.startsWith('/') ? path : `/${path}`;
+  
+  // Reemplazar extensión a .webp para evitar fondos blancos y aprovechar transparencia
+  cleanPath = cleanPath.replace(/\.(png|jpe?g)$/i, '.webp');
+  
   return `${cleanBase}${cleanPath}`;
 }
