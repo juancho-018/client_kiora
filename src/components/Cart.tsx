@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ShoppingBasket, Plus, Minus, Trash2, Loader2 } from 'lucide-react';
+import { X, ShoppingBasket, Plus, Minus, Trash2, Loader2, CreditCard, Smartphone } from 'lucide-react';
 import { useCartStore } from '../store/cartStore';
 import { OrderService } from '../services/OrderService';
 import { getImageUrl } from '../utils/getImageUrl';
@@ -8,13 +8,13 @@ import { useProductContext } from '../context/ProductContext';
 import { StripeQRModal } from './StripeQRModal';
 import Swal from 'sweetalert2';
 
-type PaymentChoice = 'efectivo' | 'tarjeta_presencial' | 'pendiente';
+type PaymentChoice = 'tarjeta' | 'digital';
 
 export const Cart: React.FC = () => {
   const { items, isOpen, toggleCart, updateQuantity, removeItem, clearCart } = useCartStore();
   const { refreshData } = useProductContext();
 
-  const [payment, setPayment] = useState<PaymentChoice>('tarjeta_presencial');
+  const [payment, setPayment] = useState<PaymentChoice>('tarjeta');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successId, setSuccessId] = useState<number | null>(null);
@@ -22,6 +22,11 @@ export const Cart: React.FC = () => {
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [showDiningModal, setShowDiningModal] = useState(false);
   const [stripeQR, setStripeQR] = useState<{ isOpen: boolean; url: string; orderId: number } | null>(null);
+
+  const [rfidState, setRfidState] = useState<'idle' | 'waiting' | 'approved' | 'error'>('idle');
+  const rfidInputRef = useRef<HTMLInputElement>(null);
+  const [rfidBuffer, setRfidBuffer] = useState('');
+  const [pendingOrderId, setPendingOrderId] = useState<number | null>(null);
 
   const total = items.reduce((acc, item) => acc + item.precio_prod * item.cantidad, 0);
 
@@ -34,7 +39,20 @@ export const Cart: React.FC = () => {
     return () => {
       document.body.style.overflow = '';
     };
-  }, [isOpen, showSummaryModal, showDiningModal, stripeQR]);
+  }, [isOpen, showSummaryModal, showDiningModal, stripeQR, rfidState]);
+
+  const handleRfidInput = async (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && rfidBuffer.trim()) {
+      setRfidState('approved');
+      await new Promise(r => setTimeout(r, 600));
+      setRfidState('idle');
+      
+      if (pendingOrderId) {
+        await OrderService.completeOrder(pendingOrderId);
+        setSuccessId(pendingOrderId);
+      }
+    }
+  };
 
   const handlePreCheckout = () => {
     setError(null);
@@ -66,7 +84,7 @@ export const Cart: React.FC = () => {
 
   const handleCheckout = async (diningOption: string) => {
     setError(null);
-    const metodoLabel = `tarjeta_presencial - ${diningOption}`;
+    const metodoLabel = `${payment} - ${diningOption}`;
 
     setSubmitting(true);
     try {
@@ -83,19 +101,28 @@ export const Cart: React.FC = () => {
 
       // (El almacenamiento temporal del recibo ha sido removido según requerimiento)
 
-      // Generar URL de Stripe - Usar PUBLIC_KIOSK_URL si existe, sino window.location.origin
-      const baseUrl = import.meta.env.PUBLIC_KIOSK_URL || window.location.origin;
-      const successUrl = `${baseUrl}/payment-success?order_id=${id}`;
-      const cancelUrl = `${baseUrl}/?payment=cancel&order_id=${id}`;
+      if (payment === 'digital') {
+        const baseUrl = import.meta.env.PUBLIC_KIOSK_URL || window.location.origin;
+        const successUrl = `${baseUrl}/payment-success?order_id=${id}`;
+        const cancelUrl = `${baseUrl}/?payment=cancel&order_id=${id}`;
 
-      const checkoutUrl = await OrderService.createCheckoutSession(id, successUrl, cancelUrl);
+        const checkoutUrl = await OrderService.createCheckoutSession(id, successUrl, cancelUrl);
 
-      if (!checkoutUrl) throw new Error('No se pudo generar el enlace de pago seguro');
+        if (!checkoutUrl) throw new Error('No se pudo generar el enlace de pago seguro');
 
-      // Mostrar QR
-      setShowDiningModal(false);
-      setStripeQR({ isOpen: true, url: checkoutUrl, orderId: id });
-      setSubmitting(false);
+        // Mostrar QR
+        setShowDiningModal(false);
+        setStripeQR({ isOpen: true, url: checkoutUrl, orderId: id });
+        setSubmitting(false);
+      } else {
+        // Tarjeta presencial - Activar modal RFID
+        setPendingOrderId(id);
+        setShowDiningModal(false);
+        setSubmitting(false);
+        setRfidState('waiting');
+        setRfidBuffer('');
+        setTimeout(() => rfidInputRef.current?.focus(), 100);
+      }
 
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'No se pudo registrar el pedido';
@@ -128,7 +155,7 @@ export const Cart: React.FC = () => {
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              className="fixed inset-0 z-[101] flex h-full w-full flex-col bg-white/95 backdrop-blur-xl shadow-2xl"
+              className="fixed inset-0 z-[101] flex flex-col bg-white/95 backdrop-blur-xl shadow-2xl"
             >
               <div className="flex items-center justify-between border-b p-6">
                 <div className="flex items-center gap-3">
@@ -140,7 +167,7 @@ export const Cart: React.FC = () => {
                 </button>
               </div>
 
-              <div className="no-scrollbar flex-1 space-y-6 overflow-y-auto p-6">
+              <div className="no-scrollbar flex-1 min-h-0 space-y-6 overflow-y-auto p-6">
                 {items.length === 0 ? (
                   <div className="flex h-full flex-col items-center justify-center space-y-8 text-center">
                     <div className="opacity-50 flex flex-col items-center space-y-6">
@@ -210,12 +237,31 @@ export const Cart: React.FC = () => {
                 <div className="space-y-6 border-t bg-neutral-50 p-8">
                   <p className="text-sm font-black uppercase tracking-widest text-neutral-400">Forma de pago</p>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="rounded-2xl px-6 py-4 text-center text-lg font-black bg-[#ec131e] text-white shadow-lg shadow-[#ec131e]/30 flex items-center justify-center transition-all hover:bg-[#d0111a] hover:-translate-y-0.5 cursor-pointer">
-                      <span>Tarjeta</span>
-                    </div>
-                    <div className="rounded-2xl px-6 py-4 text-center text-lg font-black bg-teal-500 text-white shadow-lg shadow-teal-500/30 flex items-center justify-center transition-all hover:bg-teal-600 hover:-translate-y-0.5 cursor-pointer">
-                      <span>Digital</span>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setPayment('tarjeta')}
+                      className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 transition-all active:scale-[0.98] ${
+                        payment === 'tarjeta'
+                          ? 'border-[#ec131e] bg-[#ec131e] text-white shadow-lg shadow-[#ec131e]/30 scale-105'
+                          : 'border-slate-200 bg-white text-slate-400 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-500'
+                      }`}
+                    >
+                      <CreditCard className="w-8 h-8" />
+                      <span className="font-bold text-lg">Tarjeta</span>
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={() => setPayment('digital')}
+                      className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 transition-all active:scale-[0.98] ${
+                        payment === 'digital'
+                          ? 'border-[#ec131e] bg-[#ec131e] text-white shadow-lg shadow-[#ec131e]/30 scale-105'
+                          : 'border-slate-200 bg-white text-slate-400 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-500'
+                      }`}
+                    >
+                      <Smartphone className="w-8 h-8" />
+                      <span className="font-bold text-lg">Digital</span>
+                    </button>
                   </div>
 
                   {error && (
@@ -443,6 +489,67 @@ export const Cart: React.FC = () => {
               >
                 Volver al resumen
               </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {rfidState !== 'idle' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] bg-white/95 backdrop-blur-sm flex items-center justify-center p-6"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="text-center"
+            >
+              {rfidState === 'waiting' && (
+                <>
+                  <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-[#ec131e]/10 flex items-center justify-center animate-pulse">
+                    <span className="text-4xl">💳</span>
+                  </div>
+                  <h3 className="text-3xl font-black text-slate-800 mb-2">Toca la tarjeta en el lector</h3>
+                  <p className="text-lg text-slate-500 mb-8">Acerca la tarjeta RFID al lector para procesar el pago</p>
+                  <div className="flex items-center gap-1.5 justify-center mb-8">
+                    <div className="w-3 h-3 rounded-full bg-[#ec131e] animate-bounce" style={{ animationDelay: '0s' }} />
+                    <div className="w-3 h-3 rounded-full bg-[#ec131e] animate-bounce" style={{ animationDelay: '0.15s' }} />
+                    <div className="w-3 h-3 rounded-full bg-[#ec131e] animate-bounce" style={{ animationDelay: '0.3s' }} />
+                  </div>
+                  <input
+                    ref={rfidInputRef}
+                    type="text"
+                    className="absolute opacity-0 h-0 w-0"
+                    value={rfidBuffer}
+                    onChange={e => setRfidBuffer(e.target.value)}
+                    onKeyDown={handleRfidInput}
+                    autoFocus
+                  />
+                  <p className="text-xs text-slate-400 mt-8">O escribe cualquier código y presiona Enter para simular</p>
+                  <button
+                    onClick={() => {
+                       setRfidState('idle');
+                       setShowCancelAlert(true);
+                    }}
+                    className="mt-4 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                </>
+              )}
+              {rfidState === 'approved' && (
+                <>
+                  <div className="w-24 h-24 mx-auto mb-5 rounded-full bg-emerald-100 flex items-center justify-center">
+                    <span className="text-5xl">✅</span>
+                  </div>
+                  <h3 className="text-3xl font-black text-emerald-600 mb-2">Pago aprobado</h3>
+                  <p className="text-lg text-slate-500">Tarjeta procesada correctamente</p>
+                </>
+              )}
             </motion.div>
           </motion.div>
         )}
