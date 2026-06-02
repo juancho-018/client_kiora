@@ -22,10 +22,13 @@ const Plus = ({ className }: { className?: string }) => (
 
 export const ProductCard: React.FC<Props> = ({ product, onSelect }) => {
   const addItem = useCartStore((state) => state.addItem);
+  const isAgotado = (product.stock_actual || 0) <= 0;
 
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
-    addItem(product);
+    if (!isAgotado) {
+      addItem(product);
+    }
   };
 
 
@@ -35,14 +38,21 @@ export const ProductCard: React.FC<Props> = ({ product, onSelect }) => {
       layout
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      onClick={() => onSelect(product)}
-      className="bg-white rounded-[2rem] overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer flex flex-col group p-0 border border-slate-200/60 ring-1 ring-slate-900/5"
+      onClick={() => !isAgotado && onSelect(product)}
+      className={`bg-white rounded-[2rem] overflow-hidden shadow-sm transition-all duration-300 flex flex-col p-0 border border-slate-200/60 ring-1 ring-slate-900/5 ${
+        isAgotado ? 'opacity-60 grayscale cursor-not-allowed' : 'hover:shadow-2xl hover:-translate-y-1.5 cursor-pointer group'
+      }`}
     >
       <div className="relative w-full h-[180px] overflow-hidden bg-[#f5f0eb] mb-0 p-6 flex items-center justify-center border-b border-slate-100/80">
+        {isAgotado && (
+          <div className="absolute top-4 right-4 z-10 bg-black/70 text-white text-xs font-bold px-3 py-1 rounded-full backdrop-blur-md">
+            Agotado
+          </div>
+        )}
         <img
           src={getImageUrl(product.imagen_prod) || '/placeholder.png'}
           alt={product.nom_prod}
-          className="w-full h-full object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-110"
+          className={`w-full h-full object-contain mix-blend-multiply transition-transform duration-500 ${!isAgotado && 'group-hover:scale-110'}`}
         />
       </div>
 
@@ -52,13 +62,18 @@ export const ProductCard: React.FC<Props> = ({ product, onSelect }) => {
         </div>
 
         <div className="flex items-center justify-between">
-          <span className="text-xl font-bold text-strawberry-red">
+          <span className={`text-xl font-bold ${isAgotado ? 'text-slate-500' : 'text-strawberry-red'}`}>
             ${product.precio_prod.toLocaleString()}
           </span>
 
           <button
             onClick={handleAdd}
-            className="w-10 h-10 bg-gradient-to-tr from-emerald-500 to-teal-400 text-white flex items-center justify-center rounded-full shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:-translate-y-1 hover:scale-110 active:scale-95 transition-all duration-300"
+            disabled={isAgotado}
+            className={`w-10 h-10 flex items-center justify-center rounded-full transition-all duration-300 ${
+              isAgotado 
+                ? 'bg-slate-300 text-slate-500 cursor-not-allowed' 
+                : 'bg-gradient-to-tr from-emerald-500 to-teal-400 text-white shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:-translate-y-1 hover:scale-110 active:scale-95'
+            }`}
           >
             <Plus className="w-6 h-6" />
           </button>

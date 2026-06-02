@@ -25,10 +25,17 @@ export const useCatalog = () => {
         : true;
       const matchesSearch = fuzzyMatch(p.nom_prod, searchQuery);
       
+      const stock = p.stock_actual || 0;
+      const isAgotado = stock <= 0;
+
+      // Hide out-of-stock products from general listing, show only if searching
+      if (isAgotado && !searchQuery) {
+        return false;
+      }
+
       const price = p.precio_prod;
       const matchesPrice = price >= filters.minPrice && price <= filters.maxPrice;
       
-      const stock = p.stock_actual || 0;
       const isLow = stock <= (p.stock_minimo || 0) && stock > 0;
       const matchesStock = 
         filters.stockStatus === '' ? true :
