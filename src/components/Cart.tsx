@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ShoppingBasket, Plus, Minus, Trash2, Loader2, CreditCard, Smartphone } from 'lucide-react';
+import { X, ShoppingBasket, Plus, Minus, Trash2, Loader2, CreditCard, Smartphone, Sparkles } from 'lucide-react';
 import { useCartStore } from '../store/cartStore';
 import { OrderService } from '../services/OrderService';
+import { AiService, CrossSellingRecommendation } from '../services/AiService';
 import { getImageUrl } from '../utils/getImageUrl';
 import { useProductContext } from '../context/ProductContext';
 import { StripeQRModal } from './StripeQRModal';
@@ -11,8 +12,11 @@ import Swal from 'sweetalert2';
 type PaymentChoice = 'tarjeta' | 'digital';
 
 export const Cart: React.FC = () => {
-  const { items, isOpen, toggleCart, updateQuantity, removeItem, clearCart } = useCartStore();
-  const { refreshData } = useProductContext();
+  const { items, isOpen, toggleCart, updateQuantity, removeItem, clearCart, addItem } = useCartStore();
+  const { refreshData, products } = useProductContext();
+
+  const [recommendations, setRecommendations] = useState<CrossSellingRecommendation[]>([]);
+  const [loadingRecs, setLoadingRecs] = useState(false);
 
   const [payment, setPayment] = useState<PaymentChoice>('tarjeta');
   const [submitting, setSubmitting] = useState(false);
@@ -40,6 +44,25 @@ export const Cart: React.FC = () => {
       document.body.style.overflow = '';
     };
   }, [isOpen, showSummaryModal, showDiningModal, stripeQR, rfidState]);
+
+  useEffect(() => {
+    // Fetch cross-selling recommendations when items change
+    const fetchRecs = async () => {
+      if (items.length === 0) {
+        setRecommendations([]);
+        return;
+      }
+      setLoadingRecs(true);
+      const ids = items.map(i => i.cod_prod);
+      const recs = await AiService.getCrossSellingRecommendations(ids);
+      setRecommendations(recs);
+      setLoadingRecs(false);
+    };
+    
+    // Solo consultar si el carrito está abierto o acaba de cambiar
+    const timeoutId = setTimeout(fetchRecs, 500); // debounce para no inundar el API
+    return () => clearTimeout(timeoutId);
+  }, [items]);
 
   const handleRfidInput = async (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && rfidBuffer.trim()) {
@@ -232,6 +255,45 @@ export const Cart: React.FC = () => {
                   ))
                 )}
               </div>
+
+              {/* AI Cross Selling Suggestions */}
+              {recommendations.length > 0 && items.length > 0 && (
+                <div className="bg-gradient-to-r from-violet-50 to-purple-50 p-6 border-t border-violet-100">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Sparkles className="w-5 h-5 text-violet-500" />
+                    <h3 className="text-sm font-black uppercase tracking-widest text-violet-700">También te podría interesar</h3>
+                  </div>
+                  <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
+                    {recommendations.map(rec => {
+                      const fullProduct = products.find(p => p.cod_prod === rec.product_id);
+                      if (!fullProduct) return null;
+                      
+                      return (
+                        <div key={rec.product_id} className="min-w-[200px] bg-white p-3 rounded-2xl shadow-sm border border-violet-100/50 flex flex-col gap-2">
+                          <div className="h-24 bg-neutral-50 rounded-xl overflow-hidden flex items-center justify-center p-2">
+                            <img 
+                              src={getImageUrl(fullProduct.imagen_prod) || '/placeholder.png'} 
+                              alt={fullProduct.nom_prod}
+                              className="h-full object-contain mix-blend-multiply"
+                            />
+                          </div>
+                          <div>
+                            <p className="font-bold text-slate-800 text-sm line-clamp-1">{fullProduct.nom_prod}</p>
+                            <p className="font-black text-[#ec131e]">${fullProduct.precio_unitario.toLocaleString('es-CO')}</p>
+                          </div>
+                          <button 
+                            type="button"
+                            onClick={() => addItem(fullProduct, 1)}
+                            className="mt-auto w-full py-2 bg-violet-100 text-violet-700 hover:bg-violet-600 hover:text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-1 text-sm"
+                          >
+                            <Plus className="w-4 h-4" /> Agregar
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
 
               {items.length > 0 && (
                 <div className="space-y-6 border-t bg-neutral-50 p-8">
