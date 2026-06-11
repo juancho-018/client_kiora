@@ -31,7 +31,10 @@ export function getApiBase(): string {
   if (typeof window !== 'undefined' && import.meta.env.DEV) {
     const h = window.location.hostname;
     if (h === 'localhost' || h === '127.0.0.1') {
-      return LOCAL_GATEWAY_API;
+      const isCustomRemote = raw && !raw.includes('localhost') && !raw.includes('127.0.0.1');
+      if (!isCustomRemote) {
+        return LOCAL_GATEWAY_API;
+      }
     }
   }
 

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ShoppingBasket, Plus, Minus, Trash2, Loader2, CreditCard, Smartphone, Sparkles } from 'lucide-react';
 import { useCartStore } from '../store/cartStore';
 import { OrderService } from '../services/OrderService';
-import { AiService, CrossSellingRecommendation } from '../services/AiService';
+import { AiService, type CrossSellingRecommendation } from '../services/AiService';
 import { getImageUrl } from '../utils/getImageUrl';
 import { useProductContext } from '../context/ProductContext';
 import { StripeQRModal } from './StripeQRModal';

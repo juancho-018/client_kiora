@@ -20,6 +20,7 @@ export interface Product {
   tipos_prod: string[];
   fechaven_prod?: string | null;
   categoria?: { nom_cat: string };
+  descuento?: number;
 }
 
 export interface Category {
@@ -49,6 +50,7 @@ function normalizeProduct(raw: Record<string, unknown>): Product {
     tipos_prod: Array.isArray(raw.tipos_prod) ? (raw.tipos_prod as string[]) : [],
     fechaven_prod: (raw.fechaven_prod as string) ?? null,
     categoria: raw.categoria as Product['categoria'],
+    descuento: Number(raw.descuento || 0),
   };
 }
 

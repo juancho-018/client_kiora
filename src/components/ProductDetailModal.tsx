@@ -28,7 +28,10 @@ export const ProductDetailModal: React.FC<Props> = ({ product, onClose }) => {
     onClose();
   };
 
-  const totalPrice = product.precio_prod * quantity;
+  const hasDiscount = (product.descuento || 0) > 0;
+  const discountAmount = product.descuento || 0;
+  const finalUnitPrice = product.precio_prod * (1 - discountAmount / 100);
+  const totalPrice = finalUnitPrice * quantity;
   const isOutOfStock = (product.stock_actual || 0) <= 0;
 
   return (
@@ -50,6 +53,11 @@ export const ProductDetailModal: React.FC<Props> = ({ product, onClose }) => {
         >
           {/* Product Image */}
           <div className="relative w-full md:w-1/2 aspect-[4/3] md:aspect-auto bg-[#f5f0eb] p-8 md:p-12 flex items-center justify-center border-b md:border-b-0 md:border-r border-slate-100">
+            {hasDiscount && !isOutOfStock && (
+              <div className="absolute top-4 left-4 bg-[#ec131e] text-white text-sm font-black px-3 py-1 rounded-full shadow-md z-10">
+                -{discountAmount}%
+              </div>
+            )}
             <img 
               src={getImageUrl(product.imagen_prod) || '/placeholder.png'} 
               alt={product.nom_prod}
@@ -60,9 +68,16 @@ export const ProductDetailModal: React.FC<Props> = ({ product, onClose }) => {
           <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
             <div className="mb-8">
               <h2 className="text-4xl font-black text-neutral-900 mb-2 leading-tight">{product.nom_prod}</h2>
-              <p className="text-3xl font-bold text-strawberry-red mb-6">
-                ${product.precio_prod.toLocaleString()}
-              </p>
+              <div className="mb-6">
+                {hasDiscount && !isOutOfStock && (
+                  <span className="text-lg text-neutral-400 line-through mr-2">
+                    ${product.precio_prod.toLocaleString()}
+                  </span>
+                )}
+                <span className="text-3xl font-bold text-strawberry-red">
+                  ${finalUnitPrice.toLocaleString()}
+                </span>
+              </div>
               
               <div className="max-h-40 overflow-y-auto no-scrollbar">
                 <p className="text-neutral-500 font-medium text-lg leading-relaxed">

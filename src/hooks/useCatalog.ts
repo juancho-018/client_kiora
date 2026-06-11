@@ -17,23 +17,19 @@ export const useCatalog = () => {
     stockStatus: '' as 'disponible' | 'bajo' | 'agotado' | '',
     selectedCategories: [] as number[],
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
 
   const filteredProducts = useMemo(() => {
-    return products.filter((p) => {
+    const filtered = products.filter((p) => {
       const matchesCategory = selectedCategory
         ? p.fk_cod_cat === selectedCategory || Boolean(p.fk_cod_cats?.includes(selectedCategory))
         : true;
       const matchesSearch = fuzzyMatch(p.nom_prod, searchQuery);
       
       const stock = p.stock_actual || 0;
-      const isAgotado = stock <= 0;
 
-      // Hide out-of-stock products from general listing, show only if searching
-      if (isAgotado && !searchQuery) {
-        return false;
-      }
-
-      const price = p.precio_prod;
+      const price = p.precio_prod * (1 - (p.descuento || 0) / 100);
       const matchesPrice = price >= filters.minPrice && price <= filters.maxPrice;
       
       const isLow = stock <= (p.stock_minimo || 0) && stock > 0;
@@ -49,16 +45,42 @@ export const useCatalog = () => {
 
       return matchesCategory && matchesSearch && matchesPrice && matchesStock && matchesFilterCategories;
     });
+
+    // Ordenar: Disponibles primero, agotados de último
+    return filtered.sort((a, b) => {
+      const aAgotado = (a.stock_actual || 0) <= 0;
+      const bAgotado = (b.stock_actual || 0) <= 0;
+      if (aAgotado && !bAgotado) return 1;
+      if (!aAgotado && bAgotado) return -1;
+      return 0;
+    });
   }, [products, selectedCategory, searchQuery, filters]);
+
+  // Reset page when filters change
+  useMemo(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, searchQuery, filters]);
+
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredProducts.slice(start, start + itemsPerPage);
+  }, [filteredProducts, currentPage]);
 
   const resetFilters = () => {
     setFilters({ minPrice: 0, maxPrice: 500000, stockStatus: '', selectedCategories: [] });
     setSelectedCategory(null);
+    setCurrentPage(1);
     useCartStore.getState().setSearchQuery('');
   };
 
   return {
-    products: filteredProducts,
+    products: paginatedProducts,
+    totalProducts: filteredProducts.length,
+    currentPage,
+    setCurrentPage,
+    totalPages,
     categories,
     loading,
     selectedCategory,

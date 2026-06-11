@@ -19,6 +19,10 @@ export const Catalog: React.FC = () => {
     filters,
     setFilters,
     resetFilters,
+    totalProducts,
+    currentPage,
+    setCurrentPage,
+    totalPages,
   } = useCatalog();
 
   return (
@@ -65,13 +69,12 @@ export const Catalog: React.FC = () => {
         <>
           <div className="mb-6 flex justify-between items-center px-2">
             <span className="text-xs font-bold text-slate-600 uppercase tracking-widest">
-              {products.length} producto{products.length !== 1 ? 's' : ''} encontrado{products.length !== 1 ? 's' : ''}
+              {totalProducts} producto{totalProducts !== 1 ? 's' : ''} encontrado{totalProducts !== 1 ? 's' : ''}
             </span>
           </div>
           {products.length === 0 ? (
             <div className="rounded-[2rem] border border-dashed border-neutral-200 bg-white/80 py-20 text-center">
-              <p className="text-lg font-black text-neutral-700">No hay productos con estos filtros</p>
-              <p className="mt-2 text-sm text-neutral-400">Prueba otra categoría o limpia los filtros.</p>
+              <p className="text-lg font-black text-neutral-700">No se encontraron productos con esos términos</p>
             </div>
           ) : (
           <motion.div
@@ -89,6 +92,52 @@ export const Catalog: React.FC = () => {
             </AnimatePresence>
           </motion.div>
           )}
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (() => {
+            // Build page numbers to display (show max 7 buttons with ellipsis)
+            const delta = 2;
+            const range: (number | '...')[] = [];
+            for (let i = 1; i <= totalPages; i++) {
+              if (
+                i === 1 ||
+                i === totalPages ||
+                (i >= currentPage - delta && i <= currentPage + delta)
+              ) {
+                range.push(i);
+              } else if (
+                range[range.length - 1] !== '...'
+              ) {
+                range.push('...');
+              }
+            }
+            return (
+              <div className="mt-14 flex justify-center items-center gap-2 flex-wrap">
+                {range.map((page, idx) =>
+                  page === '...' ? (
+                    <span
+                      key={`ellipsis-${idx}`}
+                      className="w-12 h-12 flex items-center justify-center text-slate-400 font-semibold text-lg select-none"
+                    >
+                      &hellip;
+                    </span>
+                  ) : (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page as number)}
+                      className={`w-12 h-12 flex items-center justify-center rounded-full font-bold text-base transition-all duration-200 active:scale-90 select-none
+                        ${currentPage === page
+                          ? 'bg-[#ec131e] text-white shadow-lg shadow-[#ec131e]/30 scale-110'
+                          : 'border-2 border-slate-200 text-slate-600 hover:border-[#ec131e] hover:text-[#ec131e] hover:scale-110 hover:shadow-md'
+                        }`}
+                    >
+                      {page}
+                    </button>
+                  )
+                )}
+              </div>
+            );
+          })()}
         </>
       )}
 

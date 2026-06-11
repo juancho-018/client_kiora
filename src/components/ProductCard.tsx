@@ -31,6 +31,10 @@ export const ProductCard: React.FC<Props> = ({ product, onSelect }) => {
     }
   };
 
+  const hasDiscount = (product.descuento || 0) > 0;
+  const discountAmount = product.descuento || 0;
+  const finalPrice = product.precio_prod * (1 - discountAmount / 100);
+
 
 
   return (
@@ -44,11 +48,18 @@ export const ProductCard: React.FC<Props> = ({ product, onSelect }) => {
       }`}
     >
       <div className="relative w-full h-[180px] overflow-hidden bg-[#f5f0eb] mb-0 p-6 flex items-center justify-center border-b border-slate-100/80">
-        {isAgotado && (
-          <div className="absolute top-4 right-4 z-10 bg-black/70 text-white text-xs font-bold px-3 py-1 rounded-full backdrop-blur-md">
-            Agotado
-          </div>
-        )}
+        <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
+          {isAgotado && (
+            <div className="bg-black/70 text-white text-xs font-bold px-3 py-1 rounded-full backdrop-blur-md">
+              Agotado
+            </div>
+          )}
+          {hasDiscount && !isAgotado && (
+            <div className="bg-strawberry-red text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
+              -{discountAmount}%
+            </div>
+          )}
+        </div>
         <img
           src={getImageUrl(product.imagen_prod) || '/placeholder.png'}
           alt={product.nom_prod}
@@ -61,10 +72,17 @@ export const ProductCard: React.FC<Props> = ({ product, onSelect }) => {
           <h3 className="text-lg font-black text-slate-800 line-clamp-2 leading-tight mb-3">{product.nom_prod}</h3>
         </div>
 
-        <div className="flex items-center justify-between">
-          <span className={`text-xl font-bold ${isAgotado ? 'text-slate-500' : 'text-strawberry-red'}`}>
-            ${product.precio_prod.toLocaleString()}
-          </span>
+        <div className="flex items-center justify-between mt-auto">
+          <div className="flex flex-col">
+            {hasDiscount && !isAgotado && (
+              <span className="text-xs text-slate-400 line-through mb-0.5">
+                ${product.precio_prod.toLocaleString()}
+              </span>
+            )}
+            <span className={`text-xl font-bold ${isAgotado ? 'text-slate-500' : 'text-strawberry-red'}`}>
+              ${finalPrice.toLocaleString()}
+            </span>
+          </div>
 
           <button
             onClick={handleAdd}
