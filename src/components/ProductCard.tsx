@@ -40,19 +40,19 @@ export const ProductCard: React.FC<Props> = ({ product, onSelect }) => {
       animate={{ opacity: 1, y: 0 }}
       onClick={() => !isAgotado && onSelect(product)}
       className={`bg-white rounded-[2rem] overflow-hidden shadow-sm transition-all duration-300 flex flex-col p-0 border border-slate-200/60 ring-1 ring-slate-900/5 ${
-        isAgotado ? 'opacity-60 grayscale cursor-not-allowed' : 'hover:shadow-2xl hover:-translate-y-1.5 cursor-pointer group'
+        isAgotado ? 'cursor-not-allowed bg-slate-50 opacity-90' : 'hover:shadow-2xl hover:-translate-y-1.5 cursor-pointer group'
       }`}
     >
       <div className="relative w-full h-[180px] overflow-hidden bg-[#f5f0eb] mb-0 p-6 flex items-center justify-center border-b border-slate-100/80">
         {isAgotado && (
-          <div className="absolute top-4 right-4 z-10 bg-black/70 text-white text-xs font-bold px-3 py-1 rounded-full backdrop-blur-md">
+          <div className="absolute top-4 right-4 z-10 bg-slate-800/80 text-white text-xs font-black uppercase tracking-wider px-4 py-1.5 rounded-full backdrop-blur-md shadow-lg border border-white/10">
             Agotado
           </div>
         )}
         <img
           src={getImageUrl(product.imagen_prod) || '/placeholder.png'}
           alt={product.nom_prod}
-          className={`w-full h-full object-contain mix-blend-multiply transition-transform duration-500 ${!isAgotado && 'group-hover:scale-110'}`}
+          className={`w-full h-full object-contain mix-blend-multiply transition-transform duration-500 ${isAgotado ? 'grayscale opacity-60' : 'group-hover:scale-110'}`}
         />
       </div>
 

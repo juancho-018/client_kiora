@@ -11,6 +11,26 @@ import Swal from 'sweetalert2';
 
 type PaymentChoice = 'tarjeta' | 'digital';
 
+const playBeep = () => {
+  try {
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.3);
+  } catch(e) {}
+};
+
 export const Cart: React.FC = () => {
   const { items, isOpen, toggleCart, updateQuantity, removeItem, clearCart, addItem } = useCartStore();
   const { refreshData, products } = useProductContext();
@@ -73,6 +93,7 @@ export const Cart: React.FC = () => {
       if (pendingOrderId) {
         await OrderService.completeOrder(pendingOrderId);
         setSuccessId(pendingOrderId);
+        playBeep();
       }
     }
   };
@@ -392,11 +413,17 @@ export const Cart: React.FC = () => {
             <motion.div
               initial={{ scale: 0.95 }}
               animate={{ scale: 1 }}
-              className="max-w-md rounded-[2rem] bg-white p-10 text-center shadow-2xl ring-1 ring-neutral-100"
+              className="max-w-md rounded-[2rem] bg-white p-10 text-center shadow-2xl ring-1 ring-neutral-100 relative overflow-hidden"
             >
-              <p className="text-sm font-bold uppercase tracking-widest text-emerald-600">Pedido registrado</p>
-              <p className="mt-4 text-4xl font-black text-neutral-900">#{successId}</p>
-              <p className="mt-4 text-neutral-500">
+              <div className="absolute -top-10 -left-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+              <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-[#ec131e]/10 rounded-full blur-3xl pointer-events-none"></div>
+              
+              <div className="w-20 h-20 mx-auto bg-emerald-100 rounded-full flex items-center justify-center mb-6">
+                <span className="text-4xl">🎉</span>
+              </div>
+              <p className="text-sm font-black uppercase tracking-widest text-emerald-600 mb-1">Pedido registrado</p>
+              <p className="mt-2 text-5xl font-black text-neutral-900 tracking-tight">#{successId}</p>
+              <p className="mt-4 text-neutral-500 font-medium">
                 Presenta este número en caja. El inventario se ha actualizado según disponibilidad.
               </p>
               <button
@@ -421,6 +448,7 @@ export const Cart: React.FC = () => {
           onSuccess={() => {
             setStripeQR(null);
             setSuccessId(stripeQR.orderId);
+            playBeep();
           }}
           onCancel={() => {
             setStripeQR(null);
