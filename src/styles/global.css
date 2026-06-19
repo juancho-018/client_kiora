@@ -45,6 +45,11 @@
     -webkit-user-drag: none;
   }
 
+  /* Force hand cursor for interactive elements on desktop/testing */
+  button, a, [role="button"], .cursor-pointer {
+    cursor: pointer !important;
+  }
+
   /* Hide the default Weglot switcher and its container */
   #weglot-switcher,
   .weglot-container,
