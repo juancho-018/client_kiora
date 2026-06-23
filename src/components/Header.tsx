@@ -38,7 +38,7 @@ export const Header: React.FC = () => {
           className="bg-neutral-200/50 backdrop-blur-md text-neutral-600 px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-neutral-200 transition-all border border-transparent active:scale-95"
         >
           <X className="w-5 h-5" />
-          <span className="text-sm uppercase tracking-wider">Cancelar</span>
+          <span className="text-sm uppercase tracking-wider">Salir</span>
         </button>
       </div>
     </header>
