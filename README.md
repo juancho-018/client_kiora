@@ -1,43 +1,55 @@
-# Astro Starter Kit: Minimal
+# 🛍️ Kiora Client (Tienda Web)
 
-```sh
-npm create astro@latest -- --template minimal
-```
+Este es el cliente público web de Kiora. Permite a los usuarios y compradores explorar el catálogo de productos y acceder a los servicios de la tienda de una manera ágil y atractiva.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## 🚀 Tecnologías
 
-## 🚀 Project Structure
+Construido con un enfoque fuerte en UX, rendimiento y SEO:
 
-Inside of your Astro project, you'll see the following folders and files:
+- **Astro v6**: Framework orientado a velocidad y entrega de contenido estático/dinámico.
+- **React v19**: Librería principal para interactividad en componentes cliente (islands).
+- **Tailwind CSS v4**: Estilos utilitarios rápidos y eficientes.
+- **Zustand**: Manejo de estado liviano para carrito y configuraciones del cliente.
+- **Framer Motion**: Animaciones fluidas de interfaz.
+- **SweetAlert2**: Notificaciones visuales de sistema atractivas.
+
+## 📁 Estructura del Proyecto
 
 ```text
-/
-├── public/
+client_kiora/
+├── public/              # Assets estáticos y logos
 ├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+│   ├── components/      # Componentes React (islas de interactividad)
+│   ├── pages/           # Rutas públicas (páginas de producto, catálogo, checkout)
+│   ├── store/           # Estado global en Zustand
+│   └── styles/          # Estilos globales y configuración Tailwind
+├── .env.example         # Ejemplo de configuración local
+└── package.json         # Dependencias
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## 🧞 Comandos y Scripts
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+Asegúrate de estar en el directorio `client_kiora/`.
 
-Any static assets, like images, can be placed in the `public/` directory.
+| Comando                   | Acción                                                |
+| :------------------------ | :---------------------------------------------------- |
+| `npm install`             | Instala todas las dependencias.                       |
+| `npm run dev`             | Inicia el servidor de desarrollo en `localhost:4321`. |
+| `npm run build`           | Compila la aplicación para producción en `./dist/`.   |
+| `npm run preview`         | Previsualiza el build de forma local.                 |
+| `npm run astro check`     | Ejecuta revisión de tipos de Astro.                   |
 
-## 🧞 Commands
+## 🔧 Configuración de Entorno
 
-All commands are run from the root of the project, from a terminal:
+1. Copia `.env.example` a `.env`
+2. Modifica la variable apuntando al API Gateway del ecosistema Kiora:
+   ```env
+   PUBLIC_API_URL=http://localhost:3000
+   ```
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+*(Revisar archivo `.env.docker` o `.env.docker.example` si se va a construir la imagen de Docker para conectar a la red de microservicios `kiora-net` en la IP virtualizada).*
 
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+## 🛠️ Notas Técnicas
+Dado que esta aplicación es expuesta completamente a Internet:
+- Asegúrate de **NUNCA** incluir variables sensibles que no tengan el prefijo `PUBLIC_` y verifica que los tokens del proxy se pidan al backend, no directamente quemados en el cliente.
+- Todo endpoint llamado debe realizarse contra las rutas públicas configuradas en el API Gateway para evitar consumir las rutas de administración (`/api/auth/...`).
